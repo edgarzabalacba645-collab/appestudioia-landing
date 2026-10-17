@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flyer Interactivo - App de Estudio Inteligente (Manual Completo)</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0d1117',
+                        cardBg: '#161b22',
+                        cardBorder: '#30363d',
+                        brandCyan: '#00C9FF',
+                        brandGreen: '#92FE9D',
+                        brandPurple: '#8a2be2'
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
+    <style>
+        html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+        body { background-color: #0d1117; color: #e6edf3; overflow-x: hidden; }
+
+        .gradient-text { background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-text-purple { background: linear-gradient(135deg, #00C9FF 0%, #8a2be2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .gradient-btn { background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%); color: #0d1117; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; text-align: center; }
+        .gradient-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 201, 255, 0.4); }
+        .gradient-btn:active { transform: translateY(1px) scale(0.98); }
+        .gradient-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .glass-panel { background: rgba(22, 27, 34, 0.85); backdrop-filter: blur(12px); border: 1px solid #30363d; }
+
+        .flip-card { background-color: transparent; width: 100%; height: 280px; perspective: 1200px; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        .flip-card-front { background-color: #e0f2fe; border: 2px solid #bae6fd; }
+        .flip-card-back { background-color: #dcfce7; border: 2px solid #bbf7d0; transform: rotateY(180deg); }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00C9FF; }
+
+        .loader { border: 3px solid #30363d; border-top: 3px solid #00C9FF; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+
+        .feature-grid-bg { background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0); background-size: 32px 32px; }
+
+        /* Stepper */
+        .stepper { display: flex; align-items: flex-start; justify-content: space-between; position: relative; }
+        .stepper::before { content: ''; position: absolute; top: 22px; left: 5%; right: 5%; height: 2px; background: #30363d; z-index: 0; }
+        .stepper-node { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; width: 16%; }
+        .stepper-circle { width: 44px; height: 44px; border-radius: 50%; background: #161b22; border: 2px solid #30363d; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #8b949e; margin-bottom: 10px; transition: all .3s; }
+        .stepper-node.active .stepper-circle { border-color: #00C9FF; color: #00C9FF; box-shadow: 0 0 20px rgba(0,201,255,0.4); background: rgba(0,201,255,0.1); }
+
+        /* Toasts */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column-reverse; gap: 10px; pointer-events: none; }
+        .toast { background: #161b22; border: 1px solid #30363d; border-left: 4px solid #00C9FF; padding: 14px 18px; border-radius: 12px; color: #e6edf3; font-weight: 600; font-size: 0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 320px; animation: toastIn .3s ease, toastOut .3s ease 3.2s forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateX(40px); } }
+
+        /* Risk meter */
+        .risk-track { width: 100%; height: 10px; border-radius: 999px; background: linear-gradient(90deg, #22c55e 0%, #eab308 45%, #ef4444 100%); position: relative; }
+        .risk-marker { position: absolute; top: -6px; width: 4px; height: 22px; background: white; border-radius: 2px; box-shadow: 0 0 10px rgba(0,0,0,0.6); transition: left .6s cubic-bezier(0.4,0,0.2,1); }
+
+        .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: #00C9FF; display: inline-block; animation: typingBounce 1.2s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: .2s; } .typing-dot:nth-child(3) { animation-delay: .4s; }
+        @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+    </style>
+</head>
+<body class="antialiased feature-grid-bg">
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Floating Navbar -->
+    <nav class="fixed w-full z-50 glass-panel border-b-0 shadow-2xl">
+        <div class="max-w-[95rem] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-4">
+                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                    <i class="fa-solid fa-book-open-reader text-brandCyan text-2xl sm:text-3xl drop-shadow-[0_0_10px_rgba(0,201,255,0.8)]"></i>
+                    <span class="font-black text-xl sm:text-2xl tracking-tighter">AppEstudio<span class="gradient-text">IA</span></span>
+                </div>
+
+                <div class="hidden 2xl:flex items-center gap-5 text-sm font-semibold text-gray-300">
+                    <a href="#primeros-pasos" class="hover:text-brandCyan transition-colors whitespace-nowrap">Primeros Pasos</a>
+                    <a href="#cobertura" class="hover:text-brandCyan transition-colors whitespace-nowrap">Cobertura</a>
+                    <a href="#herramientas" class="hover:text-brandCyan transition-colors whitespace-nowrap">Herramientas</a>
+                    <a href="#detector" class="hover:text-brandCyan transition-colors whitespace-nowrap">Detector IA</a>
+                    <a href="#comparativa" class="hover:text-brandCyan transition-colors whitespace-nowrap">Comparativa</a>
+                    <a href="#carreras" class="hover:text-brandCyan transition-colors whitespace-nowrap">Carreras</a>
+                    <a href="#ayuda" class="hover:text-brandCyan transition-colors whitespace-nowrap">Ayuda &amp; FAQ</a>
+                </div>
+
+                <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+                    <div class="hidden md:flex items-center gap-2 sm:gap-3 bg-darkBg px-3 sm:px-5 py-2 rounded-full border border-cardBorder shadow-inner">
+                        <i class="fa-solid fa-stopwatch text-brandGreen animate-pulse"></i>
+                        <span id="globalTimer" class="font-mono text-brandCyan font-bold tracking-widest text-xs sm:text-sm">00:00:00</span>
+                    </div>
+                    <a href="#cta" class="gradient-btn px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(0,201,255,0.3)] whitespace-nowrap min-w-[130px]">
+                        Obtener Licencia
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="relative pt-32 pb-16 sm:pt-40 sm:pb-24 lg:pt-48 lg:pb-32 overflow-hidden">
+        <div class="absolute top-1/4 right-0 -mr-48 w-[20rem] sm:w-[40rem] h-[20rem] sm:h-[40rem] rounded-full bg-brandCyan opacity-10 blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 -ml-48 w-[20rem] sm:w-[40rem] h-[20rem] sm:h-[40rem] rounded-full bg-brandGreen opacity-10 blur-[100px] pointer-events-none"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+            <div class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full border border-brandCyan/50 bg-brandCyan/15 text-brandCyan mb-5 font-black text-xs sm:text-sm tracking-wide">
+                <i class="fa-brands fa-windows"></i> Aplicación de escritorio para Windows <span class="text-gray-400 font-semibold">· con celular como complemento</span>
+            </div>
+            <div class="w-full max-w-3xl mx-auto mb-8 sm:mb-10 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-[2px] shadow-[0_0_40px_rgba(245,158,11,0.4)] animate-pulse">
+                <div class="bg-darkBg rounded-2xl px-5 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row items-center gap-2 sm:gap-4 justify-center text-center">
+                    <i class="fa-solid fa-clock text-amber-400 text-2xl sm:text-3xl"></i>
+                    <div>
+                        <p class="font-black text-base sm:text-xl text-amber-400 leading-snug">Licencia full hasta el 31/10/2026</p>
+                        <p class="text-gray-300 text-xs sm:text-sm font-semibold">Descargá la versión de prueba y solicitá tu licencia full <span class="text-white underline decoration-amber-400">sin cargo</span> desde la app — antes de que termine la promo.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2 rounded-full border border-brandCyan/40 bg-brandCyan/10 text-brandCyan mb-6 sm:mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(0,201,255,0.15)]">
+                <i class="fa-solid fa-bolt"></i>
+                <span class="text-xs sm:text-sm font-bold tracking-widest uppercase">Documentos • Presentaciones • 9 Módulos con IA</span>
+            </div>
+            <h1 class="text-4xl sm:text-6xl lg:text-8xl font-black tracking-tighter mb-6 sm:mb-8 leading-tight">
+                El entorno definitivo para tu <br class="hidden sm:block"/>
+                <span class="gradient-text">Investigación y Estudio</span>
+            </h1>
+            <p class="mt-4 max-w-3xl text-lg sm:text-xl lg:text-2xl text-gray-400 mx-auto mb-6 font-medium leading-relaxed px-2">
+                De principio a fin: desde que cargás un apunte hasta que escribís un trabajo completo, armás una presentación o repasás para el examen. Todo vive en un solo lugar, en tu computadora. Cálculos exactos, análisis de datos, lectura activa y repetición espaciada inteligente, impulsados por Inteligencia Artificial con tu propia clave de Google Gemini.
+            </p>
+            <div class="flex flex-wrap justify-center gap-x-8 gap-y-2 mb-10 sm:mb-12 text-sm font-bold text-gray-400">
+                <span><i class="fa-solid fa-layer-group text-brandCyan mr-2"></i>9 Módulos de estudio</span>
+                <span><i class="fa-solid fa-folder-tree text-brandGreen mr-2"></i>Materias ilimitadas</span>
+                <span><i class="fa-solid fa-clock-rotate-left text-brandPurple mr-2"></i>Repetición espaciada inteligente</span>
+                <span><i class="fa-solid fa-infinity text-brandCyan mr-2"></i>Sin límite de tamaño de apunte</span>
+            </div>
+
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brandGreen/40 bg-brandGreen/10 text-brandGreen mb-6 font-black text-xs sm:text-sm tracking-wide animate-pulse">
+                <i class="fa-solid fa-gift"></i> 3 días gratis para probar la app — sin tarjeta, sin registro
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4">
+                <a href="https://drive.google.com/file/d/1At8Fe5xMnqap8nMRMaHeaupSoatWEk56/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="gradient-btn w-full sm:w-auto px-8 py-4 rounded-full font-black text-base sm:text-lg shadow-[0_0_30px_rgba(0,201,255,0.4)] gap-3">
+                    <i class="fa-solid fa-download"></i> Descargar Gratis Ahora
+                </a>
+                <a href="#herramientas" class="bg-cardBg hover:bg-gray-800 border border-cardBorder w-full sm:w-auto px-8 py-4 rounded-full font-bold text-base sm:text-lg text-white transition-all flex items-center justify-center gap-3 text-center">
+                    <i class="fa-solid fa-toolbox"></i> Ver Herramientas
+                </a>
+                <a href="#primeros-pasos" class="bg-cardBg hover:bg-gray-800 border border-cardBorder w-full sm:w-auto px-8 py-4 rounded-full font-bold text-base sm:text-lg text-white transition-all flex items-center justify-center gap-3 text-center">
+                    <i class="fa-solid fa-rocket"></i> Ver Primeros Pasos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Podcast explicativo -->
+    <div id="podcast" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-cardBorder">
+        <div class="bg-cardBg border border-cardBorder rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row items-center gap-6">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-brandCyan/10 border border-brandCyan/40 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-podcast text-3xl sm:text-4xl text-brandCyan"></i>
+            </div>
+            <div class="flex-1 w-full text-center sm:text-left">
+                <h3 class="text-lg sm:text-xl font-bold mb-1">¿Preferís escuchar antes de instalar?</h3>
+                <p class="text-gray-400 text-sm mb-4">Un podcast corto que recorre toda la app: la prueba gratis, cómo armar documentos y presentaciones, los módulos de estudio, y cómo funciona por dentro.</p>
+                <audio controls style="width:100%; height:40px;">
+                    <source src="https://nutfrdzrdxxshysvexsd.supabase.co/storage/v1/object/public/Podcast/Podcast.mp3" type="audio/mpeg">
+                    Tu navegador no soporta audio HTML5.
+                </audio>
+            </div>
+        </div>
+    </div>
+
+    <!-- Primeros Pasos -->
+    <div id="primeros-pasos" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-cardBorder">
+        <div class="text-center mb-12 sm:mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brandGreen/30 bg-brandGreen/10 text-brandGreen mb-6 text-sm font-bold tracking-wide">
+                <i class="fa-solid fa-map-signs"></i> Guía de primer uso
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-black mb-4">De la instalación al primer resumen</h2>
+            <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">Así se ve, paso a paso, la primera vez que abrís la app. Son pasos únicos: una vez completados, no se te vuelven a pedir.</p>
+        </div>
+
+        <!-- Stepper overview -->
+        <div class="stepper mb-16 px-2 sm:px-8 hidden md:flex" id="stepperRow"></div>
+        <div class="grid grid-cols-3 gap-3 mb-16 md:hidden" id="stepperMobile"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Paso 1: Licencia -->
+            <div class="bg-cardBg border border-cardBorder rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-10 h-10 rounded-full bg-brandCyan/10 border border-brandCyan/40 text-brandCyan font-black flex items-center justify-center">1</span>
+                    <h3 class="text-xl sm:text-2xl font-bold">Ingreso al sistema (licencia)</h3>
+                </div>
+                <p class="text-gray-400 mb-6 leading-relaxed">Es la primera pantalla que aparece. Si ya tenés licencia, ingresás tu <strong>Usuario</strong> y tu <strong>Clave</strong>, y valida contra un servidor que exista, esté activa y no esté siendo usada en otra computadora. Si todavía no comprás, tocás <strong class="text-brandGreen">"Probar gratis"</strong> y arrancás directo con 3 días de prueba, sin escribir nada.</p>
+
+                <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 mb-6 shadow-inner">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Usuario</label>
+                    <div class="bg-cardBg border border-cardBorder rounded-lg px-4 py-3 text-gray-300 font-mono text-sm mb-4">Juan.Perez</div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Clave de Licencia</label>
+                    <div class="bg-cardBg border border-cardBorder rounded-lg px-4 py-3 text-gray-300 font-mono text-sm mb-5">••••••••••••••</div>
+                    <div class="gradient-btn w-full py-3 rounded-xl font-black text-sm cursor-default mb-4">Validar Licencia</div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex-1 h-px bg-cardBorder"></div>
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">o si todavía no comprás</span>
+                        <div class="flex-1 h-px bg-cardBorder"></div>
+                    </div>
+                    <div class="w-full py-3 rounded-xl font-black text-sm cursor-default text-center bg-brandGreen/10 border border-brandGreen/40 text-brandGreen"><i class="fa-solid fa-gift mr-2"></i>🎁 Probar gratis (3 días)</div>
+                </div>
+
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Mensajes posibles en esta pantalla</p>
+                <div class="space-y-2" id="licenseErrorsList"></div>
+            </div>
+
+            <!-- Paso 2: Gemini API Key -->
+            <div class="bg-cardBg border border-cardBorder rounded-3xl p-6 sm:p-8 shadow-xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-10 h-10 rounded-full bg-brandGreen/10 border border-brandGreen/40 text-brandGreen font-black flex items-center justify-center">2</span>
+                    <h3 class="text-xl sm:text-2xl font-bold">Conectar tu motor de IA (Gemini)</h3>
+                </div>
+                <p class="text-gray-400 mb-6 leading-relaxed">Una vez validada la licencia, la app pide tu propia clave <strong>gratuita</strong> de la API de Google Gemini. Así la IA trabaja con tu cuenta personal, nunca con una cuenta compartida de la aplicación.</p>
+
+                <ol class="space-y-3 mb-6" id="geminiStepsList"></ol>
+
+                <div class="bg-darkBg border border-brandGreen/30 rounded-2xl p-5 shadow-inner">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Tu API Key de Google Gemini</label>
+                    <div class="bg-cardBg border border-cardBorder rounded-lg px-4 py-3 text-brandGreen font-mono text-sm mb-4">AIzaSy••••••••••••••••••••••wX9</div>
+                    <div class="gradient-btn w-full py-3 rounded-xl font-black text-sm cursor-default">Validar Credencial y Acceder</div>
+                    <p class="text-xs text-gray-500 mt-3"><i class="fa-solid fa-lock mr-1"></i> La app hace una prueba de conexión real antes de guardar la clave, y la guarda cifrada en tu equipo: no te la vuelve a pedir en próximos inicios.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recorrido pantalla principal -->
+        <div class="bg-cardBg/50 border border-cardBorder rounded-3xl p-6 sm:p-10 mt-8">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="w-10 h-10 rounded-full bg-brandPurple/10 border border-brandPurple/40 text-brandPurple font-black flex items-center justify-center">3</span>
+                <h3 class="text-xl sm:text-2xl font-bold">Recorrido de la pantalla principal</h3>
+            </div>
+            <p class="text-gray-400 mb-8 leading-relaxed max-w-3xl">Una vez adentro, la pantalla se divide en dos zonas: la barra lateral izquierda (menú y controles) y el panel central donde trabajás cada módulo.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2 bg-darkBg border border-cardBorder rounded-2xl p-3 shadow-2xl">
+                    <p class="text-center text-xs font-bold text-gray-500 uppercase tracking-widest py-2">Barra lateral — de arriba hacia abajo</p>
+                    <div class="space-y-2" id="sidebarZonesList"></div>
+                </div>
+                <div class="lg:col-span-3 flex flex-col gap-4">
+                    <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                        <i class="fa-solid fa-heading text-brandCyan text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-white mb-1">Encabezado principal</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">Muestra la materia activa y un reloj <strong>"⏱️ Tiempo Activo"</strong>: un contador simple de la sesión actual. Si cerrás y volvés a abrir la app, arranca de nuevo desde cero — no es un contador acumulado histórico.</p>
+                        </div>
+                    </div>
+                    <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                        <i class="fa-solid fa-chart-gantt text-brandGreen text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-white mb-1">Panel "Temas de la materia y cobertura"</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">Un panel plegable que mide qué proporción real de tu material ya trabajaste, tema por tema. Es una de las funciones más particulares de la app — la explicamos en detalle más abajo, en <a href="#cobertura" class="text-brandCyan font-bold hover:underline">Motor de Cobertura</a>.</p>
+                        </div>
+                    </div>
+                    <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                        <i class="fa-solid fa-folder-open text-brandPurple text-2xl mt-1"></i>
+                        <div>
+                            <h4 class="font-bold text-white mb-1">Multi-Materia sin mezclar datos</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">Cada materia que creás (Anatomía, Derecho Civil, Programación...) tiene su propia bóveda: apuntes, tarjetas, chat y temas identificados quedan completamente separados entre materias.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Motor de Cobertura -->
+    <div id="cobertura" class="bg-cardBg/50 py-16 sm:py-24 border-y border-cardBorder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-12 items-center mb-16">
+                <div class="w-full lg:w-1/2">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 mb-6 text-sm font-bold tracking-wide">
+                        <i class="fa-solid fa-microchip"></i> Memoria Local Indexada (TF-IDF)
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-black mb-6">Mide tu avance real, no solo tus clics.</h2>
+                    <p class="text-gray-400 text-lg mb-6 leading-relaxed">
+                        A diferencia de otras apps que mandan tu libro entero a la IA (agotando tus tokens), AppEstudioIA indexa tu material localmente mediante fragmentos.
+                    </p>
+                    <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                        Hacés clic en <strong>"🔍 Identificar temas a partir del material cargado"</strong> y la IA lee una muestra repartida a lo largo de todo el documento (no solo el principio) y arma de 6 a 10 temas. Cada vez que generás algo en Lectura Activa, Autoevaluación, Tarjetas, Feynman o Mapa Conceptual, la app registra <strong>qué fragmento real</strong> usaste y lo suma como cobertura del tema activo. El porcentaje es real, no decorativo: está atado a fragmentos concretos que efectivamente usaste, no a un simple contador de clics.
+                    </p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brandGreen"></i> <span class="font-medium">No consume tokens innecesarios de API.</span></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brandGreen"></i> <span class="font-medium">Identificación automática de 6 a 10 unidades temáticas.</span></li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-brandGreen"></i> <span class="font-medium">Rotación inteligente para cubrir temas menos vistos.</span></li>
+                    </ul>
+                </div>
+
+                <div class="w-full lg:w-1/2">
+                    <div class="bg-darkBg border border-cardBorder rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10"><i class="fa-solid fa-chart-gantt text-9xl text-white"></i></div>
+                        <h3 class="text-xl font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-layer-group text-brandCyan"></i> Temas de la materia y cobertura</h3>
+                        <p class="text-sm text-gray-400 mb-6">Materia: Biología Evolutiva</p>
+
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm mb-1 font-bold"><span>Avance total de la materia</span> <span class="text-brandCyan">42%</span></div>
+                            <div class="w-full bg-cardBg rounded-full h-3 border border-cardBorder">
+                                <div class="bg-gradient-to-r from-brandCyan to-brandGreen h-3 rounded-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 mt-6">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1 text-gray-300"><span>1. Ciclo de Krebs y Respiración</span> <span>100%</span></div>
+                                <div class="w-full bg-cardBg rounded-full h-1.5"><div class="bg-brandGreen h-1.5 rounded-full" style="width: 100%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1 text-gray-300"><span>2. Síntesis de Proteínas</span> <span>65%</span></div>
+                                <div class="w-full bg-cardBg rounded-full h-1.5"><div class="bg-brandCyan h-1.5 rounded-full" style="width: 65%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1 text-gray-300"><span>3. Genética Mendeliana</span> <span class="text-yellow-500 font-bold">15%</span></div>
+                                <div class="w-full bg-cardBg rounded-full h-1.5"><div class="bg-yellow-500 h-1.5 rounded-full shadow-[0_0_10px_rgba(234,179,8,0.5)]" style="width: 15%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1 text-gray-300"><span>4. Evolución de Poblaciones</span> <span>0%</span></div>
+                                <div class="w-full bg-cardBg rounded-full h-1.5"><div class="bg-gray-600 h-1.5 rounded-full" style="width: 0%"></div></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 p-3 bg-brandCyan/10 border border-brandCyan/30 rounded-lg text-xs text-brandCyan flex items-center gap-2">
+                            <i class="fa-solid fa-rotate"></i> Modo de estudio actual: <strong>Automático (Priorizando Tema 3 y 4)</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modos de repaso del panel -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-darkBg border border-cardBorder rounded-2xl p-6">
+                    <h4 class="font-bold text-white mb-3 flex items-center gap-2"><i class="fa-solid fa-shuffle text-brandCyan"></i> Modo Automático (aleatorio)</h4>
+                    <p class="text-sm text-gray-400 leading-relaxed">La app rota sola entre los temas, priorizando los menos cubiertos. Recomendado si querés avanzar parejo en toda la materia sin pensarlo.</p>
+                </div>
+                <div class="bg-darkBg border border-cardBorder rounded-2xl p-6">
+                    <h4 class="font-bold text-white mb-3 flex items-center gap-2"><i class="fa-solid fa-thumbtack text-brandGreen"></i> Fijar un tema puntual</h4>
+                    <p class="text-sm text-gray-400 leading-relaxed">Elegís un tema de la lista y todos los módulos se enfocan ahí hasta que lo cambies. Útil los días antes de rendir, si un tema puntual te cuesta más.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-darkBg border border-cardBorder rounded-2xl p-6 flex items-start gap-4">
+                    <i class="fa-solid fa-arrows-rotate text-brandPurple text-xl mt-1"></i>
+                    <div><h4 class="font-bold text-white mb-1">🔄 Re-identificar temas</h4><p class="text-sm text-gray-400">Vuelve a analizar el material actual (útil si cargaste apuntes nuevos) y arma la lista de temas de cero, reiniciando el avance a 0%.</p></div>
+                </div>
+                <div class="bg-darkBg border border-cardBorder rounded-2xl p-6 flex items-start gap-4">
+                    <i class="fa-solid fa-arrow-rotate-left text-yellow-500 text-xl mt-1"></i>
+                    <div><h4 class="font-bold text-white mb-1">♻️ Reiniciar avance</h4><p class="text-sm text-gray-400">Mantiene la misma lista de temas, pero pone la cobertura de todos en 0% otra vez. Sirve para repasar todo antes de un final sin perder la clasificación.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Herramientas -->
+    <div id="herramientas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-cardBorder">
+        <div class="text-center mb-14">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-brandCyan/30 bg-brandCyan/10 text-brandCyan mb-6 text-sm font-bold tracking-wide">
+                <i class="fa-solid fa-toolbox"></i> Todo lo que podés hacer
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-black mb-4">De tu material a un resultado concreto</h2>
+            <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">Cuatro secciones, en el orden en que realmente se usan: primero cargás el material, después elegís qué hacer con él.</p>
+        </div>
+
+        <!-- Las 4 cajas principales -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandCyan/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandCyan/10 border border-brandCyan/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-upload text-brandCyan text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">1. Cargar Material</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">PDF, Word, PowerPoint, Markdown, imágenes con OCR, CSV o Excel. Todo lo demás parte de acá.</p>
+            </div>
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandGreen/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandGreen/10 border border-brandGreen/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-file-pen text-brandGreen text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">2. Creador de Documentos</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">Tesis, monografías, trabajos finales, papers o ensayos: un borrador completo en PDF, con la extensión real que cada tipo necesita.</p>
+            </div>
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandPurple/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandPurple/10 border border-brandPurple/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-display text-brandPurple text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">3. Creador de Presentaciones</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">PowerPoint real y editable, con diseño que varía según el contenido (dato destacado, pasos, gráficos, comparaciones), paleta de colores a elección y tus propias imágenes.</p>
+            </div>
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandCyan/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandCyan/10 border border-brandCyan/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-layer-group text-brandCyan text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">4. Modo Estudio</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">Las 9 herramientas para el día a día de estudiar, detalladas abajo.</p>
+            </div>
+        </div>
+
+        <!-- Los 9 módulos de Modo Estudio -->
+        <div class="text-center mb-10">
+            <h3 class="text-2xl sm:text-3xl font-black mb-3">Los 9 módulos de Modo Estudio</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-chart-pie text-brandCyan text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Análisis de Tesis</h5><p class="text-sm text-gray-400 leading-relaxed">Revisión de estilo, interpretación de tablas y análisis estadístico completo sobre tus propios datos, con gráficos.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-book-open text-brandGreen text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Lectura Activa</h5><p class="text-sm text-gray-400 leading-relaxed">Resúmenes adaptados al nivel que elijas, para repasar rápido sin perder lo importante.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-pen-to-square text-brandPurple text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Autoevaluación</h5><p class="text-sm text-gray-400 leading-relaxed">Preguntas nuevas cada vez, de desarrollo o de opción múltiple, con corrección explicada.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-clone text-brandCyan text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Tarjetas de Memoria</h5><p class="text-sm text-gray-400 leading-relaxed">Repetición espaciada inteligente: decide cuándo te conviene repasar cada tarjeta.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-comments text-brandGreen text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Mentor IA</h5><p class="text-sm text-gray-400 leading-relaxed">Chat para dudas puntuales sobre tu material, con cálculo matemático, químico o estadístico exacto.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-graduation-cap text-brandPurple text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Técnica Feynman</h5><p class="text-sm text-gray-400 leading-relaxed">Le explicás un tema con tus palabras y la app evalúa qué tan clara y completa fue tu explicación.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-diagram-project text-brandCyan text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Mapa Conceptual</h5><p class="text-sm text-gray-400 leading-relaxed">Mapas conceptuales y diagramas técnicos (clases, entidad-relación) para carreras que lo necesitan.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-dragon text-brandGreen text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Creador Mnemotécnico</h5><p class="text-sm text-gray-400 leading-relaxed">Reglas y frases inventadas para memorizar listas, fórmulas o secuencias.</p></div>
+            </div>
+            <div class="bg-darkBg border border-cardBorder rounded-2xl p-5 flex items-start gap-4">
+                <i class="fa-solid fa-database text-brandPurple text-xl mt-1"></i>
+                <div><h5 class="font-bold text-white mb-1">Práctica SQL</h5><p class="text-sm text-gray-400 leading-relaxed">Consultas sobre un esquema de ejemplo, con corrección automática y ejercicios sugeridos.</p></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Detector de IA y Humanizador -->
+    <div id="detector" class="bg-cardBg/50 py-16 sm:py-24 border-y border-cardBorder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 sm:mb-16">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/30 bg-green-500/10 text-green-400 mb-6 text-sm font-bold tracking-wide">
+                    <i class="fa-solid fa-user-secret"></i> Heurística 100% local
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-black mb-4">Detector de IA y Humanizador</h2>
+                <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">En casi todos los módulos que generan texto vas a ver este cartel, calculado enteramente en tu computadora, sin enviar nada afuera.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center mb-14">
+                <div class="bg-darkBg border border-cardBorder rounded-3xl p-8 shadow-2xl">
+                    <p class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">🕵️ Detector de IA (estimado)</p>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-4xl font-black text-white" id="detectorDemoPerc">14%</span>
+                        <span class="text-sm font-bold text-brandGreen">Bajo riesgo — Textura Humana</span>
+                    </div>
+                    <div class="risk-track mb-2"><div class="risk-marker" id="detectorDemoMarker" style="left: 14%;"></div></div>
+                    <div class="flex justify-between text-xs text-gray-500 font-bold uppercase tracking-widest mb-6"><span>Bajo</span><span>Moderado</span><span>Alto</span></div>
+                    <button onclick="rerollDetectorDemo()" class="w-full border border-cardBorder hover:border-brandCyan text-gray-300 hover:text-brandCyan font-bold py-3 rounded-xl transition-colors text-sm"><i class="fa-solid fa-shuffle mr-2"></i> Simular otro análisis</button>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="flex items-start gap-4">
+                        <i class="fa-solid fa-chart-line text-brandCyan text-xl mt-1"></i>
+                        <div><h4 class="font-bold text-white mb-1">Cómo se calcula</h4><p class="text-sm text-gray-400 leading-relaxed">Analiza "burstiness" (variación en la longitud de las oraciones), muletillas típicas de IA ("es fundamental", "en resumen"), guiones largos (—) en exceso y diversidad léxica del texto generado.</p></div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i class="fa-solid fa-arrows-rotate text-brandGreen text-xl mt-1"></i>
+                        <div><h4 class="font-bold text-white mb-1">Humanizador automático</h4><p class="text-sm text-gray-400 leading-relaxed">Si el riesgo estimado supera el <strong>40%</strong>, la app reescribe el texto automáticamente (hasta 3 intentos) para que suene más natural, antes de mostrártelo.</p></div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <i class="fa-solid fa-circle-exclamation text-yellow-500 text-xl mt-1"></i>
+                        <div><h4 class="font-bold text-white mb-1">No es un detector oficial</h4><p class="text-sm text-gray-400 leading-relaxed">Es una referencia rápida, no reemplaza a herramientas como Turnitin, GPTZero o Copyleaks, y no hay que tomar el porcentaje como garantía frente a esos sistemas.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 flex items-start gap-4 max-w-4xl mx-auto">
+                <i class="fa-solid fa-scale-balanced text-yellow-500 text-2xl mt-1"></i>
+                <p class="text-sm text-yellow-100/90 leading-relaxed"><strong>Uso responsable:</strong> el humanizador está pensado para que el contenido que generás para vos (resúmenes, explicaciones, respuestas del mentor) te resulte más natural de leer y estudiar. Entregar texto de IA como si fuera enteramente tuyo puede entrar en conflicto con las políticas de integridad académica de tu institución, más allá de que el detector interno marque bajo riesgo. Usalo como apoyo para estudiar, no como reemplazo de tu propio trabajo entregable.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Ayuda: Solución de problemas, Glosario y FAQ -->
+    <div id="ayuda" class="bg-cardBg py-16 sm:py-24 border-t border-cardBorder">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <!-- Troubleshooting -->
+            <div class="mb-20">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl sm:text-4xl font-black mb-4">Solución de Problemas</h2>
+                    <p class="text-lg text-gray-400 max-w-2xl mx-auto">Situaciones comunes tomadas directo del manual técnico, y qué hacer en cada caso.</p>
+                </div>
+                <div class="space-y-3" id="troubleshootingList"></div>
+            </div>
+
+            <!-- Glosario -->
+            <div class="mb-20">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl sm:text-4xl font-black mb-4">Glosario Rápido</h2>
+                    <p class="text-lg text-gray-400 max-w-2xl mx-auto">Los términos que vas a ver una y otra vez dentro de la app.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="glossaryGrid"></div>
+            </div>
+
+            <!-- FAQ -->
+            <div id="faq">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl sm:text-4xl font-black mb-4">Preguntas Frecuentes</h2>
+                </div>
+                <div class="space-y-4" id="faqList"></div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Comparativa -->
+    <div id="comparativa" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-cardBorder">
+        <div class="text-center mb-14">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brandCyan/40 bg-brandCyan/10 text-brandCyan mb-5 font-black text-xs sm:text-sm tracking-wide">
+                <i class="fa-solid fa-scale-balanced"></i> Análisis comparativo de mercado — agosto 2026
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-black mb-4">¿Por qué esta app y no otra?</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed">Comparado con NotebookLM, Anki, RemNote, Obsidian y Quizlet en las dimensiones donde más se nota la diferencia.</p>
+        </div>
+
+        <!-- Grid de fortalezas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandCyan/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandCyan/10 border border-brandCyan/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-chart-pie text-brandCyan text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">Cobertura de materia</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">Ninguna otra app te dice qué porcentaje de la materia ya cubriste, tema por tema. Es la única aquí que responde esa pregunta antes de un final.</p>
+            </div>
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandPurple/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandPurple/10 border border-brandPurple/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-layer-group text-brandPurple text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">Todo en un solo lugar</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">Para igualar lo que hace esta app sola, necesitarías combinar NotebookLM + Anki + un chat de IA + un generador de presentaciones + un entorno de SQL.</p>
+            </div>
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6 hover:border-brandCyan/50 transition-colors">
+                <div class="w-12 h-12 rounded-full bg-brandCyan/10 border border-brandCyan/40 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-calculator text-brandCyan text-lg"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">Cálculo exacto, no adivinado</h4>
+                <p class="text-sm text-gray-400 leading-relaxed">El Mentor IA resuelve matrices, derivadas y ecuaciones con motor matemático real, no con una IA "adivinando" el resultado como el resto.</p>
+            </div>
+        </div>
+
+        <!-- Tabla resumen -->
+        <div class="bg-cardBg border border-cardBorder rounded-3xl p-6 sm:p-8 overflow-x-auto">
+            <table class="w-full text-sm min-w-[560px]">
+                <thead>
+                    <tr class="border-b border-cardBorder">
+                        <th class="text-left py-3 pr-4 font-bold text-gray-400">Dimensión</th>
+                        <th class="py-3 px-3 font-black text-brandCyan text-center">Esta App</th>
+                        <th class="py-3 px-3 font-semibold text-gray-500 text-center">Resto del mercado</th>
+                    </tr>
+                </thead>
+                <tbody id="comparativaBody" class="divide-y divide-cardBorder"></tbody>
+            </table>
+        </div>
+        <p class="text-xs text-gray-600 text-center mt-4">Basado en análisis comparativo propio frente a NotebookLM, Anki, RemNote, Obsidian y Quizlet, agosto 2026.</p>
+
+        <!-- Puntaje por categoría -->
+        <div class="text-center mt-16 mb-10">
+            <h3 class="text-2xl sm:text-3xl font-black mb-3">Puntaje por categoría <span class="text-gray-500 font-bold text-lg">(0 a 10)</span></h3>
+            <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed text-sm">Una puntuación honesta, no solo favorable: en algunas categorías esta app gana claro, en otras la comunidad o el diseño de apps más grandes todavía le sacan ventaja.</p>
+        </div>
+        <div class="bg-cardBg border border-cardBorder rounded-3xl p-6 sm:p-8 overflow-x-auto">
+            <table class="w-full text-sm min-w-[720px]">
+                <thead>
+                    <tr class="border-b border-cardBorder">
+                        <th class="text-left py-3 pr-4 font-bold text-gray-400">Categoría</th>
+                        <th class="py-3 px-2 font-black text-brandCyan text-center">Esta App</th>
+                        <th class="py-3 px-2 font-semibold text-gray-500 text-center">NotebookLM</th>
+                        <th class="py-3 px-2 font-semibold text-gray-500 text-center">Anki</th>
+                        <th class="py-3 px-2 font-semibold text-gray-500 text-center">RemNote</th>
+                        <th class="py-3 px-2 font-semibold text-gray-500 text-center">Obsidian</th>
+                        <th class="py-3 px-2 font-semibold text-gray-500 text-center">Quizlet</th>
+                    </tr>
+                </thead>
+                <tbody id="puntajeBody" class="divide-y divide-cardBorder"></tbody>
+                <tfoot>
+                    <tr id="puntajePromedioRow" class="border-t-2 border-cardBorder font-black"></tr>
+                </tfoot>
+            </table>
+        </div>
+        <p class="text-xs text-gray-600 text-center mt-4">Puntajes propios sobre 10 por categoría, a criterio del desarrollador, basados en las fuentes públicas de cada producto (sitios oficiales y reviews independientes) a septiembre de 2026. No son puntajes oficiales de cada empresa.</p>
+    </div>
+
+
+    <!-- Carreras -->
+    <div id="carreras" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-cardBorder">
+        <div class="text-center mb-14">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brandPurple/40 bg-brandPurple/10 text-brandPurple mb-5 font-black text-xs sm:text-sm tracking-wide">
+                <i class="fa-solid fa-graduation-cap"></i> ¿Para qué carreras sirve?
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-black mb-4">Encontrá tu carrera</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto leading-relaxed">Cuanto más teórica, densa, memorística o de cálculo exacto sea la materia, mejor rinde la app. Así se ubican las carreras más comunes.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-cardBg border border-brandGreen/40 rounded-2xl p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-circle-check text-brandGreen"></i>
+                    <h3 class="font-bold text-brandGreen">Encajan muy bien</h3>
+                </div>
+                <ul class="space-y-2 text-sm text-gray-300">
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Medicina (años preclínicos)</li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Derecho</li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Ingeniería (materias teóricas y exactas)</li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Ingeniería en Sistemas / Informática <span class="text-gray-500">(UML y SQL)</span></li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Química / Farmacia</li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Economía / Cs. Económicas</li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Psicología</li>
+                    <li><i class="fa-solid fa-check text-brandGreen mr-2 text-xs"></i>Profesorados / Cs. de la Educación</li>
+                </ul>
+            </div>
+            <div class="bg-cardBg border border-yellow-500/40 rounded-2xl p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-circle-half-stroke text-yellow-500"></i>
+                    <h3 class="font-bold text-yellow-500">Encajan parcialmente</h3>
+                </div>
+                <ul class="space-y-2 text-sm text-gray-300">
+                    <li><i class="fa-solid fa-minus text-yellow-500 mr-2 text-xs"></i>Arquitectura <span class="text-gray-500">(historia y teoría sí, diseño no)</span></li>
+                    <li><i class="fa-solid fa-minus text-yellow-500 mr-2 text-xs"></i>Cs. Biológicas <span class="text-gray-500">(teoría sí, laboratorio no)</span></li>
+                </ul>
+            </div>
+            <div class="bg-cardBg border border-cardBorder rounded-2xl p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-circle-xmark text-gray-500"></i>
+                    <h3 class="font-bold text-gray-400">No es el foco</h3>
+                </div>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><i class="fa-solid fa-minus text-gray-600 mr-2 text-xs"></i>Artes, Música, Diseño</li>
+                    <li><i class="fa-solid fa-minus text-gray-600 mr-2 text-xs"></i>Materias de taller o laboratorio</li>
+                </ul>
+                <p class="text-xs text-gray-600 mt-4">Son disciplinas de práctica y ejecución, no de repaso de apuntes.</p>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-cardBg border border-cardBorder rounded-2xl p-6 sm:p-8">
+            <h3 class="font-bold text-white mb-4 flex items-center gap-2"><i class="fa-solid fa-microchip text-brandCyan"></i> Lo que hay debajo, en capacidades técnicas</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-400">
+                <p><strong class="text-gray-200">Extracción de texto:</strong> PDF, imágenes con OCR (español e inglés), TXT, CSV, Excel.</p>
+                <p><strong class="text-gray-200">Cálculo exacto:</strong> álgebra y cálculo simbólico (sympy), matrices (numpy/scipy), balanceo químico y tablas de verdad de lógica.</p>
+                <p><strong class="text-gray-200">Estadística real:</strong> pandas + scipy para descriptiva, correlación de Pearson y regresión lineal exacta.</p>
+                <p><strong class="text-gray-200">Memoria a largo plazo:</strong> repetición espaciada inteligente, para repasar cada tarjeta justo antes de que la olvides.</p>
+                <p><strong class="text-gray-200">Diagramas UML:</strong> clases, secuencia y entidad-relación, generados e interactivos (arrastrar y zoom).</p>
+                <p><strong class="text-gray-200">Práctica de SQL:</strong> consultas reales contra bases de ejemplo (no simuladas por IA), con feedback de estilo.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- CTA Footer -->
+    <div id="cta" class="bg-darkBg border-t border-cardBorder py-16 sm:py-24 text-center relative overflow-hidden">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-3xl bg-brandCyan opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
+
+        <div class="relative z-10 max-w-3xl mx-auto px-4 sm:px-6">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-brandGreen/40 bg-brandGreen/10 text-brandGreen mb-6 font-black text-xs sm:text-sm tracking-wide">
+                <i class="fa-solid fa-gift"></i> Empezá con 3 días de prueba gratis
+            </div>
+            <h2 class="text-3xl sm:text-5xl font-black mb-6">Instala el entorno definitivo en tu PC.</h2>
+
+            <p class="text-lg sm:text-xl text-gray-400 mb-4 font-medium">Archivos binarios locales para Windows. Procesamiento descentralizado. Cero suscripciones mensuales encubiertas por tokens. Licencia atada a 1 PC (HWID).</p>
+            <p class="text-base sm:text-lg text-gray-500 mb-12 font-medium">Descargás, instalás, y adentro de la app tocás <strong class="text-brandGreen">"Probar gratis"</strong>. Sin pedir nada, sin hablar con nadie antes. Si te sirve, activás tu licencia completa cuando quieras.</p>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+                <a href="https://drive.google.com/file/d/1At8Fe5xMnqap8nMRMaHeaupSoatWEk56/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="inline-block">
+                    <button class="gradient-btn w-full px-6 sm:px-10 py-5 rounded-full font-black text-base sm:text-xl shadow-[0_0_30px_rgba(0,201,255,0.4)] flex items-center gap-4 hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-download text-2xl"></i>
+                        <span>Descargar Gratis (3 días)</span>
+                    </button>
+                </a>
+
+                <a href="https://wa.me/5491166912047?text=Hola%20Edgar,%20quiero%20consultar%20sobre%20la%20App%20Estudio%20Inteligente." target="_blank" rel="noopener noreferrer" class="inline-block">
+                    <button class="bg-cardBg hover:bg-gray-800 border border-cardBorder w-full px-6 sm:px-10 py-5 rounded-full font-black text-base sm:text-xl text-white flex items-center gap-4 hover:scale-105 transition-transform">
+                        <i class="fa-brands fa-whatsapp text-2xl text-brandGreen"></i>
+                        <span>Consultar por WhatsApp</span>
+                    </button>
+                </a>
+            </div>
+
+            <p class="mt-8 text-sm text-gray-500 font-bold bg-cardBg inline-block px-4 py-2 rounded-full border border-cardBorder">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500 mr-2"></i> Requiere API Key gratuita de Google Gemini (te enseñamos a obtenerla en 2 minutos).
+            </p>
+        </div>
+    </div>
+
+
+    <script>
+    // ==========================================
+    // Toast helper
+    // ==========================================
+    function showToast(msg, type) {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        const color = type === 'warn' ? '#eab308' : (type === 'err' ? '#ef4444' : '#00C9FF');
+        el.className = 'toast';
+        el.style.borderLeftColor = color;
+        el.innerHTML = `<i class="fa-solid ${type === 'warn' ? 'fa-triangle-exclamation' : (type === 'err' ? 'fa-circle-xmark' : 'fa-circle-check')} mr-2" style="color:${color}"></i>${msg}`;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 3600);
+    }
+
+    // ==========================================
+    // Static content data (Primeros Pasos, Ayuda)
+    // ==========================================
+    const stepperSteps = [
+        { icon: 'fa-download', label: 'Instalar' },
+        { icon: 'fa-key', label: 'Validar Licencia' },
+        { icon: 'fa-robot', label: 'Configurar IA' },
+        { icon: 'fa-folder-plus', label: 'Crear Materia' },
+        { icon: 'fa-inbox', label: 'Cargar Apuntes' },
+        { icon: 'fa-layer-group', label: 'Elegir Módulo' }
+    ];
+
+    const comparativaFilas = [
+        { label: 'Cobertura por tema', app: 'Sí — único en el mercado', resto: 'Ningún competidor lo ofrece' },
+        { label: 'Módulos incluidos', app: '9 + Documentos + Presentaciones', resto: 'Se necesitan 3-4 apps distintas' },
+        { label: 'Idioma nativo', app: 'Español, pensado desde cero', resto: 'Mayormente traducciones del inglés' },
+        { label: 'Cálculo matemático', app: 'Exacto (motor determinístico)', resto: 'Estimado por IA, con margen de error' },
+        { label: 'Diagramas UML y práctica SQL', app: 'Incluido, para Ingeniería en Sistemas', resto: 'Ningún competidor lo ofrece' }
+    ];
+
+    // Puntajes 0-10 por categoría. Pensados para ser defendibles, no solo
+    // favorables: hay categorías (comunidad, diseño) donde esta app puntúa
+    // más bajo que competidores más grandes o más viejos, a propósito.
+    const puntajeFilas = [
+        { label: 'Privacidad de tu material',        app: 9,  notebooklm: 3, anki: 8,  remnote: 3, obsidian: 9, quizlet: 2 },
+        { label: 'IA sobre TUS propios documentos',  app: 8,  notebooklm: 9, anki: 1,  remnote: 6, obsidian: 5, quizlet: 4 },
+        { label: 'Módulos en un solo lugar',         app: 10, notebooklm: 4, anki: 2,  remnote: 5, obsidian: 6, quizlet: 3 },
+        { label: 'Repetición espaciada (flashcards)',app: 7,  notebooklm: 1, anki: 10, remnote: 9, obsidian: 6, quizlet: 6 },
+        { label: 'Acceso desde el celular',          app: 7,  notebooklm: 8, anki: 8,  remnote: 7, obsidian: 7, quizlet: 9 },
+        { label: 'Comunidad / contenido compartido', app: 1,  notebooklm: 2, anki: 9,  remnote: 6, obsidian: 5, quizlet: 10 },
+        { label: 'Diseño e interfaz',                app: 6,  notebooklm: 9, anki: 4,  remnote: 8, obsidian: 7, quizlet: 9 }
+    ];
+
+    const licenseErrors = [
+        { icon: 'fa-ban', color: 'text-red-400', text: '"Esta licencia se encuentra inactiva o suspendida": la licencia existe pero no está habilitada. Consultá para reactivarla.' },
+        { icon: 'fa-triangle-exclamation', color: 'text-yellow-400', text: '"Acceso Denegado: esta licencia pertenece a otra computadora": ya fue activada en otro equipo.' },
+        { icon: 'fa-circle-xmark', color: 'text-red-400', text: '"Credenciales inválidas": revisá usuario y clave (son sensibles a mayúsculas).' },
+        { icon: 'fa-hourglass-end', color: 'text-yellow-400', text: '"Tu período de prueba terminó": los 3 días del trial se vencieron. Podés pedir tu licencia completa ahí mismo, sin salir de esa pantalla.' },
+        { icon: 'fa-wifi', color: 'text-yellow-400', text: '"Error de conexión con la base de datos": necesitás internet para este paso (y para el resto de la app, porque la IA trabaja en la nube de Google).' }
+    ];
+
+    const geminiSteps = [
+        'Entrá a Google AI Studio (aistudio.google.com/app/apikey) e iniciá sesión con tu cuenta de Google.',
+        'Hacé clic en el botón azul "Create API key".',
+        'Copiá la clave que se genera (una cadena larga de letras y números).',
+        'Pegala en "Tu API Key de Google Gemini" dentro de la app y hacé clic en "Validar Credencial y Acceder".'
+    ];
+
+    const sidebarZones = [
+        { icon: 'fa-circle-check', color: 'text-brandGreen', title: 'Licencia Activa / 🎁 Licencia de Prueba', desc: 'Cartel informativo: si compraste, confirma tu usuario; si estás en trial, muestra cuántos días de prueba te quedan y un botón para pedir la licencia completa.' },
+        { icon: 'fa-folder', color: 'text-yellow-400', title: '📁 Materia Actual', desc: 'Selector de materia activa + "Agregar Nueva Materia". Siempre visible: es lo que se usa todo el tiempo.' },
+        { icon: 'fa-dashboard', color: 'text-brandPurple', title: '🗂️ ¿Qué querés hacer?', desc: 'Las 4 secciones principales: Cargar Material, Creador de Documentos, Creador de Presentaciones y Modo Estudio (con sus 9 herramientas adentro). Siempre visible, navegación con un clic.' },
+        { icon: 'fa-microchip', color: 'text-brandCyan', title: '⚙️ Motor de IA', desc: 'Estado de conexión con Gemini, cambio de clave y uso de la cuota diaria. Plegable, para no ocupar lugar cuando no hace falta.' },
+        { icon: 'fa-mobile-screen', color: 'text-brandGreen', title: '📱 Celular', desc: 'Vincular el celular por código QR y sincronizar el material, para seguir estudiando fuera de la computadora.' },
+        { icon: 'fa-folder-open', color: 'text-brandCyan', title: '💾 Archivos de la Materia', desc: 'Los archivos cargados y los documentos generados, todo junto. Podés borrar un archivo puntual, abrir la carpeta de exportados, o "🧹 Finalizar y Limpiar Materia" (irreversible, con confirmación).' },
+        { icon: 'fa-right-from-bracket', color: 'text-gray-400', title: 'Cerrar Sesión', desc: 'Para cambiar de usuario en la misma computadora sin cerrar la app.' }
+    ];
+
+    const troubleshootingRows = [
+        { s: 'La app no arranca / se cierra sola al abrir', a: 'Reinstalá con el último instalador. Si persiste, contactá para revisar el archivo de registro (log) que la app guarda en su carpeta de datos.' },
+        { s: '"Error de motor. Reiniciá la app o cambiá la clave."', a: 'Tu clave de Gemini puede haber vencido, alcanzado su límite gratuito, o estar mal copiada. Probá "Cambiar Clave de Gemini" en la barra lateral.' },
+        { s: 'Un PDF no trae texto / advierte "parece un escaneo"', a: 'Es una imagen escaneada, no texto real. Subí el archivo como imagen (PNG/JPG) para que se procese con OCR.' },
+        { s: 'Quiero pasar la licencia a otra computadora', a: 'Contactá para liberar el vínculo de la licencia con el equipo anterior antes de activarla en el nuevo.' },
+        { s: 'Generé una tarjeta o pregunta repetida', a: 'Es poco común, porque cada generación incluye una instrucción para variar el enfoque, pero puede pasar. Simplemente volvé a generar.' },
+        { s: 'Perdí una materia por error al usar "Finalizar y Limpiar Materia"', a: 'Esa acción borra todo de forma permanente y no se puede deshacer — incluyendo los PDFs que tenías en el Repositorio de Documentos. Si querés conservar algo, copialo a otra carpeta fuera del programa antes de finalizar la materia.' },
+        { s: 'El reloj de "Tiempo Activo" se reinicia', a: 'Es un contador de la sesión actual. Si cerrás y volvés a abrir, arranca de nuevo desde cero; no es un contador acumulado histórico.' }
+    ];
+
+    const glossaryTerms = [
+        { term: 'Materia', def: 'Un espacio de trabajo independiente dentro de la app. Cada materia tiene sus propios apuntes, tarjetas, chat y temas.' },
+        { term: 'Bóveda', def: 'El almacenamiento cifrado, local en tu computadora, donde se guardan los archivos que subís.' },
+        { term: 'Cobertura de un tema', def: 'Porcentaje del contenido de un tema que ya usaste para generar material de estudio (no un simple contador de clics).' },
+        { term: 'Repaso espaciado inteligente', def: 'El sistema que decide cuándo conviene volver a ver cada tarjeta, según qué tan bien la recordaste la última vez.' },
+        { term: 'Detector de IA (estimado)', def: 'Estimación local de qué tan "artificial" suena un texto generado; no es un detector profesional oficial.' },
+        { term: 'HWID', def: 'Identificador único de tu computadora, usado para atar tu licencia a ese equipo y para cifrar tus archivos.' }
+    ];
+
+    const faqItems = [
+        { q: '¿Qué es el "Repaso Espaciado"?', a: 'La memoria funciona mejor si repasás algo justo antes de olvidarlo, no todos los días por igual. Una tarjeta que te sale fácil se te muestra dentro de varios días; una que te cuesta aparece mañana. Con el tiempo, las que ya sabés bien aparecen cada vez menos seguido.' },
+        { q: '¿Por qué me pide una clave propia de Google Gemini?', a: 'Al usar tu propia clave (gratuita en Google AI Studio), tu material no pasa por servidores de la aplicación: la conexión es directa y encriptada entre tu computadora y tu cuenta de Google. Podés cambiarla cuando quieras desde "⚙️ Motor de IA → Cambiar Clave de Gemini".' },
+        { q: '¿Por qué me pide validar en cada computadora?', a: 'Cada licencia queda atada a la primera computadora donde se activa, a través del HWID. Esto evita que la misma licencia se use en muchas máquinas a la vez. Si necesitás pasar la licencia a otra PC, contactanos para liberar el vínculo anterior.' },
+        { q: '¿Cambiar de materia hace algo raro?', a: 'Al cambiar de materia en el selector, la app recarga automáticamente los apuntes, el mazo de tarjetas, el historial del chat y los temas correspondientes a esa materia. Es normal que la pantalla parpadee un instante.' },
+        { q: '¿Cómo evita quedarse sin memoria al subir libros gigantes?', a: 'La app NO manda el libro entero a la IA. Utiliza un índice local que fragmenta el documento y, ante una consulta, busca matemáticamente los fragmentos más relevantes; solo esos se envían a Gemini. No hay límite práctico de tamaño.' },
+        { q: '¿Qué tan en serio hay que tomarse el porcentaje de cobertura?', a: 'Muy en serio: a diferencia de un contador que suma "+20%" por cada clic, este medidor está atado a fragmentos concretos que efectivamente se usaron para generar contenido. Si un tema está bajo, es una señal honesta de que todavía no lo trabajaste.' },
+        { q: '¿Importa si contesto con honestidad en las tarjetas?', a: 'Sí, mucho. Si marcás "Bien" o "Fácil" en una tarjeta que en realidad no sabías, el sistema la va a espaciar más de lo que corresponde y te va a jugar en contra el día del examen. El algoritmo funciona mejor cuanto más honesta es tu autoevaluación.' },
+        { q: '¿Qué tan confiable es el Detector de IA integrado?', a: 'Es una heurística propia de la app, pensada como referencia rápida (mira variación de oraciones, muletillas típicas y diversidad léxica). No reemplaza a un detector profesional como Turnitin, GPTZero o Copyleaks.' },
+        { q: '¿Qué significa el "Bloqueo por HWID"?', a: 'Tu licencia y tu llave de desencriptación se atan a la huella digital única de tu placa base. Si copiás tu carpeta cifrada a otra PC, el sistema niega el acceso, protegiéndote contra robo físico de datos.' }
+    ];
+
+
+    // ==========================================
+    // Static section renderers
+    // ==========================================
+    function renderStepper() {
+        const row = document.getElementById('stepperRow');
+        const mobile = document.getElementById('stepperMobile');
+        stepperSteps.forEach((s, i) => {
+            const active = i < 3;
+            row.innerHTML += `<div class="stepper-node ${active ? 'active' : ''}"><div class="stepper-circle"><i class="fa-solid ${s.icon}"></i></div><span class="text-xs font-bold ${active ? 'text-white' : 'text-gray-500'}">${s.label}</span></div>`;
+            mobile.innerHTML += `<div class="bg-cardBg border border-cardBorder rounded-xl p-3 text-center"><i class="fa-solid ${s.icon} text-brandCyan mb-1 block"></i><span class="text-[10px] font-bold text-gray-400">${i + 1}. ${s.label}</span></div>`;
+        });
+    }
+
+    function renderLicenseErrors() {
+        const el = document.getElementById('licenseErrorsList');
+        el.innerHTML = licenseErrors.map(e => `<div class="flex items-start gap-3 bg-darkBg border border-cardBorder rounded-xl p-3"><i class="fa-solid ${e.icon} ${e.color} mt-0.5"></i><p class="text-xs text-gray-400 leading-relaxed">${e.text}</p></div>`).join('');
+    }
+
+    function renderComparativa() {
+        const el = document.getElementById('comparativaBody');
+        el.innerHTML = comparativaFilas.map(f => `<tr><td class="py-3 pr-4 font-semibold text-gray-300">${f.label}</td><td class="py-3 px-3 text-center font-bold text-brandGreen">${f.app}</td><td class="py-3 px-3 text-center text-gray-500">${f.resto}</td></tr>`).join('');
+    }
+
+    function colorPuntaje(valor, esApp) {
+        if (esApp) return 'text-brandCyan font-black';
+        if (valor >= 8) return 'text-brandGreen font-bold';
+        if (valor >= 5) return 'text-gray-300';
+        return 'text-gray-600';
+    }
+
+    function renderPuntajeMercado() {
+        const el = document.getElementById('puntajeBody');
+        el.innerHTML = puntajeFilas.map(f => `<tr>
+            <td class="py-3 pr-4 font-semibold text-gray-300">${f.label}</td>
+            <td class="py-3 px-2 text-center ${colorPuntaje(f.app, true)}">${f.app}</td>
+            <td class="py-3 px-2 text-center ${colorPuntaje(f.notebooklm)}">${f.notebooklm}</td>
+            <td class="py-3 px-2 text-center ${colorPuntaje(f.anki)}">${f.anki}</td>
+            <td class="py-3 px-2 text-center ${colorPuntaje(f.remnote)}">${f.remnote}</td>
+            <td class="py-3 px-2 text-center ${colorPuntaje(f.obsidian)}">${f.obsidian}</td>
+            <td class="py-3 px-2 text-center ${colorPuntaje(f.quizlet)}">${f.quizlet}</td>
+        </tr>`).join('');
+
+        const cols = ['app', 'notebooklm', 'anki', 'remnote', 'obsidian', 'quizlet'];
+        const promedios = {};
+        cols.forEach(c => { promedios[c] = (puntajeFilas.reduce((sum, f) => sum + f[c], 0) / puntajeFilas.length).toFixed(1); });
+        document.getElementById('puntajePromedioRow').innerHTML = `
+            <td class="py-3 pr-4">Promedio</td>
+            <td class="py-3 px-2 text-center text-brandCyan">${promedios.app}</td>
+            <td class="py-3 px-2 text-center text-gray-400">${promedios.notebooklm}</td>
+            <td class="py-3 px-2 text-center text-gray-400">${promedios.anki}</td>
+            <td class="py-3 px-2 text-center text-gray-400">${promedios.remnote}</td>
+            <td class="py-3 px-2 text-center text-gray-400">${promedios.obsidian}</td>
+            <td class="py-3 px-2 text-center text-gray-400">${promedios.quizlet}</td>
+        `;
+    }
+
+    function renderGeminiSteps() {
+        const el = document.getElementById('geminiStepsList');
+        el.innerHTML = geminiSteps.map((s, i) => `<li class="flex items-start gap-3"><span class="w-6 h-6 rounded-full bg-brandGreen/10 border border-brandGreen/40 text-brandGreen text-xs font-black flex items-center justify-center shrink-0 mt-0.5">${i + 1}</span><span class="text-sm text-gray-400 leading-relaxed">${s}</span></li>`).join('');
+    }
+
+    function renderSidebarZones() {
+        const el = document.getElementById('sidebarZonesList');
+        el.innerHTML = sidebarZones.map(z => `<div class="bg-cardBg border border-cardBorder rounded-xl p-3 flex items-start gap-3 hover:border-brandCyan/50 transition-colors"><i class="fa-solid ${z.icon} ${z.color} mt-0.5 w-4 text-center"></i><div><h5 class="text-xs font-bold text-white">${z.title}</h5><p class="text-[11px] text-gray-500 leading-snug">${z.desc}</p></div></div>`).join('');
+    }
+
+    function renderTroubleshooting() {
+        const el = document.getElementById('troubleshootingList');
+        el.innerHTML = troubleshootingRows.map(r => `
+            <details class="group bg-darkBg border border-cardBorder rounded-2xl transition-all open:border-yellow-500/50">
+                <summary class="p-5 font-bold text-base cursor-pointer outline-none flex justify-between items-center gap-4 text-white group-hover:text-yellow-400">
+                    <span class="flex items-center gap-3"><i class="fa-solid fa-circle-question text-yellow-500 shrink-0"></i>${r.s}</span>
+                    <i class="fa-solid fa-plus text-yellow-500 group-open:rotate-45 transition-transform duration-300 shrink-0"></i>
+                </summary>
+                <div class="px-5 pb-5 pt-0 border-t border-cardBorder/50 text-gray-400 leading-relaxed text-sm ml-8">${r.a}</div>
+            </details>`).join('');
+    }
+
+    function renderGlossary() {
+        const el = document.getElementById('glossaryGrid');
+        el.innerHTML = glossaryTerms.map(g => `<div class="bg-darkBg border border-cardBorder rounded-2xl p-5 hover:border-brandPurple/50 transition-colors"><h4 class="font-black text-brandPurple mb-1 text-sm uppercase tracking-wide">${g.term}</h4><p class="text-sm text-gray-400 leading-relaxed">${g.def}</p></div>`).join('');
+    }
+
+    function renderFaq() {
+        const el = document.getElementById('faqList');
+        el.innerHTML = faqItems.map(f => `
+            <details class="group bg-darkBg border border-cardBorder rounded-2xl transition-all open:border-brandCyan">
+                <summary class="p-6 font-bold text-lg cursor-pointer outline-none flex justify-between items-center gap-4 text-white group-hover:text-brandCyan">
+                    <span>${f.q}</span>
+                    <i class="fa-solid fa-plus text-brandCyan group-open:rotate-45 transition-transform duration-300 shrink-0"></i>
+                </summary>
+                <div class="p-6 pt-0 border-t border-cardBorder/50 text-gray-400 leading-relaxed">${f.a}</div>
+            </details>`).join('');
+    }
+
+
+    // ==========================================
+    // Detector IA demo card (sección independiente)
+    // ==========================================
+    function rerollDetectorDemo() {
+        const perc = Math.floor(Math.random() * 60) + 5;
+        const label = perc < 25 ? 'Bajo riesgo — Textura Humana' : (perc < 45 ? 'Riesgo Moderado' : 'Alto riesgo — Humanizador Aplicado');
+        const color = perc < 25 ? 'text-brandGreen' : (perc < 45 ? 'text-yellow-400' : 'text-red-400');
+        document.getElementById('detectorDemoPerc').innerText = perc + '%';
+        document.getElementById('detectorDemoMarker').style.left = perc + '%';
+        const labelEl = document.getElementById('detectorDemoPerc').parentElement.querySelector('span:last-child');
+        labelEl.className = `text-sm font-bold ${color}`;
+        labelEl.innerText = label;
+    }
+
+
+    // ==========================================
+    // Global Timer (Reloj en vivo)
+    // ==========================================
+    let sessionSeconds = 0;
+    setInterval(() => {
+        sessionSeconds++;
+        const h = String(Math.floor(sessionSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((sessionSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(sessionSeconds % 60).padStart(2, '0');
+        const timerEl = document.getElementById('globalTimer');
+        if (timerEl) timerEl.innerText = `${h}:${m}:${s}`;
+    }, 1000);
+
+    // ==========================================
+    // Init
+    // ==========================================
+    renderStepper();
+    renderLicenseErrors();
+    renderComparativa();
+    renderPuntajeMercado();
+    renderGeminiSteps();
+    renderSidebarZones();
+    renderTroubleshooting();
+    renderGlossary();
+    renderFaq();
+
+    </script>
+</body>
+</html>
